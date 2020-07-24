@@ -33,7 +33,6 @@ class HotelsController extends Controller
             $BestHotelsRequest->merge(['city'=>$request->city,'fromDate'=>$request->from_date,'toDate'=>$request->to_date,'numberOfAdults'=>$request->adults_number]);
             $BestHotels = $this->BestHotelAPI($BestHotelsRequest);
             $BestHotelsCount  = count($BestHotels);
-            array_multisort( array_column($BestHotels, "hotelRate"), SORT_DESC, $BestHotels );
 
             for($i=0; $i<$BestHotelsCount ; $i++){
                 array_push($OurHotels,
@@ -41,7 +40,8 @@ class HotelsController extends Controller
                                   'provider' => 'BestHotels',
                                   'hotelName' => $BestHotels[$i]['hotel'],
                                   'fare' => $this->calculate_hotel_fare_per_day($request->from_date,$request->to_date,$request->adults_number,$BestHotels[$i]['hotelFare']),
-                                  'amenities' => explode(",",$BestHotels[$i]['roomAmenities']) // change amenities from string to array 
+                                  'amenities' => explode(",",$BestHotels[$i]['roomAmenities']), // change amenities from string to array 
+                                  'rate' => intVal($BestHotels[$i]['hotelRate'])
                                 )
                             );
             }
@@ -51,7 +51,6 @@ class HotelsController extends Controller
             $TopHotelsRequest->merge(['city'=>$request->city,'from'=>$request->from_date,'To'=>$request->to_date,'adultsCount'=>$request->adults_number]);
             $TopHotels = $this->TopHotelsAPI($TopHotelsRequest);            
             $TopHotelsCount = count($TopHotels);
-            array_multisort( array_column($TopHotels, "rate"), SORT_DESC, $TopHotels );
 
             for($j=0; $j<$TopHotelsCount ; $j++){
                 array_push($OurHotels, 
@@ -59,12 +58,20 @@ class HotelsController extends Controller
                                 'provider' => 'TopHotels',
                                 'hotelName' => $TopHotels[$j]['hotelName'],
                                 'fare' => $TopHotels[$j]['price'],
-                                'amenities' => $TopHotels[$j]['amenities']   
+                                'amenities' => $TopHotels[$j]['amenities'],
+                                'rate' => strlen($TopHotels[$j]['rate']),
                             )
                 );
             }
 
+            // sorting array desc order by rating
+            array_multisort( array_column($OurHotels, "rate"), SORT_DESC, $OurHotels );
 
+            // remova rate from the array
+            $finalCount = count($OurHotels);
+            for($k=0; $k<$finalCount; $k++){
+                unset($OurHotels[$k]['rate']);
+            }
             
         
             // return Json with status code and result data 
@@ -85,42 +92,42 @@ class HotelsController extends Controller
          */
        $hotelsSourceData = [
            [
-               'hotel' => 'BestHotel1',
+               'hotel' => 'BestHotel_1',
                'hotelRate'=>'1',
                'hotelFarePerDay' => '50',
                'roomAmenities' => 'bed,TV,bathroom',
                'city' => 'AAC',
            ],
            [
-                'hotel' => 'BestHotel2',
+                'hotel' => 'BestHotel_2',
                 'hotelRate'=>'5',
                 'hotelFarePerDay' => '300',
                 'roomAmenities' => 'bed,TV,bathroom,livingroom,kitchen',
                 'city' => 'ABS',
             ],
             [
-                'hotel' => 'BestHotel3',
+                'hotel' => 'BestHotel_3',
                 'hotelRate'=>'4',
                 'hotelFarePerDay' => '200',
                 'roomAmenities' => 'bed,bathroom',
                 'city' => 'ALY',
             ],
             [
-                'hotel' => 'BestHotel4',
+                'hotel' => 'BestHotel_4',
                 'hotelRate'=>'5',
                 'hotelFarePerDay' => '600',
                 'roomAmenities' => 'bed,TV,bathroom,fridge,ariconditioner',
                 'city' => 'ASW',
             ],
             [
-                'hotel' => 'BestHotel5',
+                'hotel' => 'BestHotel_5',
                 'hotelRate'=>'3',
                 'hotelFarePerDay' => '20',
                 'roomAmenities' => 'bed,TV',
                 'city' => 'AAC',
             ],
             [
-                'hotel' => 'BestHotel6',
+                'hotel' => 'BestHotel_6',
                 'hotelRate'=>'2',
                 'hotelFarePerDay' => '10',
                 'roomAmenities' => 'bed',
@@ -185,7 +192,7 @@ class HotelsController extends Controller
          */
         $hotelsSourceData = [
             [
-                'hotel' => 'TopHotel1',
+                'hotel' => 'TopHotel_1',
                 'hotelRate'=>'*',
                 'hotelFarePerDay' => '50',
                 'roomAmenities' => array('bed','TV','bathroom'),
@@ -193,7 +200,7 @@ class HotelsController extends Controller
                 'discount'=> '10%',
             ],
             [
-                 'hotel' => 'TopHotel2',
+                 'hotel' => 'TopHotel_2',
                  'hotelRate'=>'*****',
                  'hotelFarePerDay' => '300',
                  'roomAmenities' => array('bed','TV','bathroom','livingroom','kitchen'),
@@ -201,7 +208,7 @@ class HotelsController extends Controller
                  'discount'=> '3%',
              ],
              [
-                 'hotel' => 'TopHotel3',
+                 'hotel' => 'TopHotel_3',
                  'hotelRate'=>'***',
                  'hotelFarePerDay' => '200',
                  'roomAmenities' => array('bed','bathroom'),
@@ -209,7 +216,7 @@ class HotelsController extends Controller
                  'discount'=> '0',
              ],
              [
-                 'hotel' => 'TopHotel4',
+                 'hotel' => 'TopHotel_4',
                  'hotelRate'=>'*****',
                  'hotelFarePerDay' => '600',
                  'roomAmenities' => array('bed','TV','bathroom','fridge','ariconditioner'),
@@ -217,7 +224,7 @@ class HotelsController extends Controller
                  'discount'=> '60%',
              ],
              [
-                 'hotel' => 'TopHotel5',
+                 'hotel' => 'TopHotel_5',
                  'hotelRate'=>'***',
                  'hotelFarePerDay' => '20',
                  'roomAmenities' => array('bed','TV'),
@@ -225,7 +232,7 @@ class HotelsController extends Controller
                  'discount'=> '6%',
              ],
              [
-                 'hotel' => 'TopHotel6',
+                 'hotel' => 'TopHotel_6',
                  'hotelRate'=>'**',
                  'hotelFarePerDay' => '10',
                  'roomAmenities' => array('bed'),
